@@ -21,9 +21,16 @@ public:
 
 	static PhillipsHueLight* CreateLight(int iId, std::string iName, bool iLightOn, int iBrightness);
 
+	void setId(int iId);
 	const int getId() const;
+
+	void setName(std::string iName);
 	const std::string getName() const;
+
+	void setState(bool iState);
 	const bool getState() const;
+
+	void setBrightness(int iBrightness);
 	const int getBrightness() const;
 
 private:

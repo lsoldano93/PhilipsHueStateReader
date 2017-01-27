@@ -40,9 +40,27 @@ PhillipsHueLight* PhillipsHueLight::CreateLight(int iId, std::string iName, bool
 }
 
 
+// Takes in new value and prints update
+void PhillipsHueLight::setId(int iId)
+{
+	mId = iId;
+
+	// TODO Print update
+}
+
+
 const int PhillipsHueLight::getId() const
 {
 	return mId;
+}
+
+
+// Takes in new value and prints update
+void PhillipsHueLight::setName(std::string iName)
+{
+	mName = iName;
+
+	// TODO Print update
 }
 
 
@@ -52,9 +70,27 @@ const std::string PhillipsHueLight::getName() const
 }
 
 
+// Takes in new value and prints update
+void PhillipsHueLight::setState(bool iState)
+{
+	mLightOn = iState;
+
+	// TODO Print update
+}
+
+
 const bool PhillipsHueLight::getState() const
 {
 	return mLightOn;
+}
+
+
+// Takes in new value and prints update
+void PhillipsHueLight::setBrightness(int iBrightness)
+{
+	mBrightness = iBrightness;
+
+	// TODO Print update
 }
 
 
