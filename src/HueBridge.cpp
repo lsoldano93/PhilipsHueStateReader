@@ -8,8 +8,9 @@
 #include "constants.h"
 #include "HueBridge.h"
 
-//#include <sstream>
+#include <sstream>
 #include <iostream>
+
 #include <curlpp/cURLpp.hpp>
 #include <curlpp/Easy.hpp>
 #include <curlpp/Options.hpp>
@@ -45,7 +46,41 @@ const std::string HueBridge::getAddress()
 
 bool HueBridge::getLights()
 {
-	makeHttpRequest(NEW_DEVELOPER_KEY);
+	rapidjson::Document* tJson = makeHttpRequest(NEW_DEVELOPER_KEY);
+
+	if (tJson == 0 || tJson->IsObject() == false)
+	{
+		std::cout << "** Error in request/response string at getLights()\n";
+		delete tJson;
+		return true;
+	}
+
+	if (tJson->HasMember(LIGHTS_JSON_KEY) == false || (*tJson)[LIGHTS_JSON_KEY].IsObject() == false)
+	{
+		std::cout << "** Error with LIGHTS_KEY at getLights()\n";
+		delete tJson;
+		return true;
+	}
+
+	// Iterate through JSON lights object
+	for (rapidjson::Value::MemberIterator tLight = (*tJson)[LIGHTS_JSON_KEY].MemberBegin();
+			tLight != (*tJson)[LIGHTS_JSON_KEY].MemberEnd(); ++tLight)
+	{
+		std::string tId = tLight->name.GetString();
+
+		// TODO: Fix, Incorrect
+//		if (tJson->HasMember(STATE_JSON_KEY) == false)
+//		{
+//			std::cout << "** Error with STATE_KEY for " << tId << " at getLights()\n";
+//			continue;
+//		}
+
+	}
+
+
+
+	delete tJson;
+	return false;
 }
 
 
@@ -57,11 +92,14 @@ void HueBridge::updateLights()
 
 
 // Uses cURLpp to make HTTP request to Hue Bridge
-void HueBridge::makeHttpRequest(std::string iKey)
+rapidjson::Document* HueBridge::makeHttpRequest(std::string iKey)
 {
 	// Reformat to include Bridge address
 	std::string tUrl = mAddress + "/" + iKey;
-	std::cout << "Making request to " << tUrl << "\n"; // TODO Remove
+
+#if DEBUG
+	std::cout << "Making request to " << tUrl << "\n";
+#endif
 
 	try
 	{
@@ -70,12 +108,36 @@ void HueBridge::makeHttpRequest(std::string iKey)
 
 		// Configure request
 		curlpp::Easy tRequest;
+		std::ostringstream tResponseStream;
+		curlpp::options::WriteStream tWs(&tResponseStream);
+
 		tRequest.setOpt(curlpp::options::Url(tUrl));
 		tRequest.setOpt(curlpp::options::Timeout(1));
+		tRequest.setOpt(tWs);
 
 		tRequest.perform();
 
+#if DEBUG
+		std::cout << "Response: " << tResponseStream.str() << "\n";
+#endif
 
+		// Format to JSON and check for error
+		rapidjson::Document* tJson = new rapidjson::Document;
+		if (tJson->Parse(tResponseStream.str().c_str()).HasParseError())
+		{
+			delete tJson;
+			return 0;
+		}
+
+#if DEBUG
+	for (rapidjson::Value::ConstMemberIterator tIt = tJson->MemberBegin(); tIt != tJson->MemberEnd(); ++tIt)
+	{
+		static const char* kTypeNames[] = { "Null", "False", "True", "Object", "Array", "String", "Number" };
+		printf("Type of member %s is %s\n", tIt->name.GetString(), kTypeNames[tIt->value.GetType()]);
+	}
+#endif
+
+		return tJson;
 	}
 	catch( curlpp::RuntimeError &e )
 	{
@@ -87,8 +149,7 @@ void HueBridge::makeHttpRequest(std::string iKey)
 		std::cout << e.what() << "\n";
 	}
 
-	std::cout << "\n";
-
+	return 0;
 }
 
 

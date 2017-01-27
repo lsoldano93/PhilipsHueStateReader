@@ -23,10 +23,11 @@ int main(int argc, char *argv[])
 		// Ask user for address of bridge
 		std::cout << "Welcome to Phillip's Hue State Reader!\n";
 		std::cout << "Please enter your Phillip's Bridge IP Address: ";
-		std::cin >> tAddress;
+		//std::cin >> tAddress;
 		std::cout << "\n";
 
 		// Configure Bridge API to use given address and check address' validity
+		tAddress = "localhost";
 		if (tHueBridge.setAddress(tAddress) == false) break;
     }
 
@@ -35,10 +36,10 @@ int main(int argc, char *argv[])
 
     // TODO: Add ability to exit with key press
     // Run until user issues exit command
-    while (true)
-    {
-    	tHueBridge.updateLights();
-    }
+//    while (true)
+//    {
+//    	tHueBridge.updateLights();
+//    }
 
     return 0;
 }

@@ -10,6 +10,8 @@
 
 #include "PhillipsHueLight.h"
 
+#include <rapidjson/Document.h>
+
 #include <string>
 #include <list>
 
@@ -33,7 +35,7 @@ private:
 	std::string mAddress;
 	std::list<PhillipsHueLight*> mLightsList;
 
-	void makeHttpRequest(std::string iKey);
+	rapidjson::Document* makeHttpRequest(std::string iKey);
 
 };
 

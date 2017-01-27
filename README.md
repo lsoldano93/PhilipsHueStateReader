@@ -7,9 +7,10 @@ This is a Phillips Hue 'Hello World' project to gather and print the status of a
 
 To compile this application on Mac OSX:
 
-	1. Install curlpp - 'brew install curlpp'
-	2. Enter command - 'curlpp-config --cflags --libs'
-	3. Ensure that the Eclipse project settings hold the proper paths to your include and lib folders, which contain curl and curlpp
+	1. Install rapidjson - 'brew install rapidjson'
+	2. Install curlpp - 'brew install curlpp'
+	3. Enter command - 'curlpp-config --cflags --libs'
+	4. Ensure that the Eclipse project settings hold the proper paths to your include and lib folders, which contain curl and curlpp
 
 
 Note:
