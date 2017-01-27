@@ -1,0 +1,3 @@
+
+
+#define MAX_BRIGHTNESS 255
