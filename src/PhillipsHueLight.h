@@ -15,14 +15,10 @@ class PhillipsHueLight
 
 public:
 
-	PhillipsHueLight();
-	PhillipsHueLight(int iId, std::string iName, bool iLightOn, int iBrightness);
+	static PhillipsHueLight* CreateLight(std::string iId, std::string iName, bool iLightOn, int iBrightness);
 	~PhillipsHueLight();
 
-	static PhillipsHueLight* CreateLight(int iId, std::string iName, bool iLightOn, int iBrightness);
-
-	void setId(int iId);
-	const int getId() const;
+	const std::string getId() const;
 
 	void setName(std::string iName);
 	const std::string getName() const;
@@ -36,12 +32,17 @@ public:
 
 private:
 
-	int mId;
+	std::string mId;
 	std::string mName;
 	bool mLightOn;
 	int mBrightness;
 
-	void print();
+	PhillipsHueLight();
+	PhillipsHueLight(std::string iId, std::string iName, bool iLightOn, int iBrightness);
+
+	void printChange(std::string iKey, std::string iNewValue);
+	void printChange(std::string iKey, bool iNewValue);
+	void printChange(std::string iKey, int iNewValue);
 
 };
 

@@ -13,8 +13,9 @@
 #include <rapidjson/Document.h>
 
 #include <string>
-#include <list>
+#include <map>
 
+typedef std::map<std::string, PhillipsHueLight*> LightMap;
 
 class HueBridge
 {
@@ -33,11 +34,16 @@ public:
 private:
 
 	std::string mAddress;
-	std::list<PhillipsHueLight*> mLightsList;
+	LightMap mLightMap;
+
+	void addLight(std::string iId);
+	void updateLight(PhillipsHueLight* iLight);
+	void checkLights();
 
 	rapidjson::Document* makeHttpRequest(std::string iKey);
 
 	void printAllLights();
+	void printNewLight(PhillipsHueLight* iLight, bool iLastLight, bool iTabbed);
 
 };
 

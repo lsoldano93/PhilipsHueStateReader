@@ -10,6 +10,7 @@
 
 #include <sstream>
 #include <iostream>
+#include <set>
 
 #include <curlpp/cURLpp.hpp>
 #include <curlpp/Easy.hpp>
@@ -24,11 +25,8 @@ HueBridge::HueBridge()
 
 HueBridge::~HueBridge()
 {
-	while (mLightsList.empty() == false)
-	{
-		delete mLightsList.front();
-		mLightsList.pop_front();
-	}
+	// Free PhillipsHueLights pointers
+	for (auto tIt : mLightMap) delete tIt.second;
 }
 
 
@@ -69,8 +67,7 @@ bool HueBridge::getLights()
 	}
 
 	// Iterate through JSON lights object
-	for (rapidjson::Value::MemberIterator tLight = (*tJson)[LIGHTS_JSON_KEY].MemberBegin();
-			tLight != (*tJson)[LIGHTS_JSON_KEY].MemberEnd(); ++tLight)
+	for (auto tLight = (*tJson)[LIGHTS_JSON_KEY].MemberBegin(); tLight != (*tJson)[LIGHTS_JSON_KEY].MemberEnd(); ++tLight)
 	{
 		// Get light id
 		std::string tId = tLight->name.GetString();
@@ -114,8 +111,8 @@ bool HueBridge::getLights()
 
 
 		// Create a new Phillips Hue Light and store if it meets criteria
-		PhillipsHueLight* tHueLight = PhillipsHueLight::CreateLight(std::stoi(tId), tName, tLightState, tBrightness);
-		if (tHueLight != 0) mLightsList.push_back(tHueLight);
+		PhillipsHueLight* tHueLight = PhillipsHueLight::CreateLight(tId, tName, tLightState, tBrightness);
+		if (tHueLight != 0) mLightMap[tId] = tHueLight;
 	}
 
 	printAllLights();
@@ -124,8 +121,64 @@ bool HueBridge::getLights()
 }
 
 
-// Checks for new lights, then checks lights in given list and updates their state
+// Checks for new lights, then checks lights in member map and updates their state
 void HueBridge::updateLights()
+{
+	checkLights();
+	for (auto it : mLightMap) updateLight(it.second);
+}
+
+
+// Checks light listing for new lights and removed lights
+void HueBridge::checkLights()
+{
+	// Get lights list, push light ids to stack
+	rapidjson::Document* tJson = makeHttpRequest(GET_LIGHTS_KEY);
+
+	// Verify JSON object
+	if (tJson == 0 || tJson->IsObject() == false)
+	{
+		std::cout << "** Error in request/response string at checkLights()\n";
+		delete tJson;
+		return;
+	}
+
+
+	// Iterate through JSON object
+	std::set<std::string> tLightIds;
+	for (auto tIt = tJson->MemberBegin(); tIt != tJson->MemberEnd(); ++tIt)
+	{
+		tLightIds.insert(tIt->name.GetString());
+	}
+
+
+	// Compare ids to map - add new lights
+	for (const auto& tIt : tLightIds)
+	{
+		const auto tIt2 = mLightMap.find(tIt);
+		if (tIt2 == mLightMap.end()) addLight(tIt);
+	}
+
+
+	// Compare ids to map - remove old lights
+	for (auto tIt = mLightMap.begin(); tIt != mLightMap.end(); )
+	{
+		const auto tIt2 = tLightIds.find(tIt->first);
+		if (tIt2 == tLightIds.end()) delete tIt->second;
+		mLightMap.erase(tIt++);
+	}
+}
+
+
+// Adds a new light to member map
+void HueBridge::addLight(std::string iId)
+{
+
+}
+
+
+// Updates a given light
+void HueBridge::updateLight(PhillipsHueLight* iLight)
 {
 
 }
@@ -170,7 +223,7 @@ rapidjson::Document* HueBridge::makeHttpRequest(std::string iKey)
 		}
 
 #if DEBUG
-	for (rapidjson::Value::ConstMemberIterator tIt = tJson->MemberBegin(); tIt != tJson->MemberEnd(); ++tIt)
+	for (auto tIt = tJson->MemberBegin(); tIt != tJson->MemberEnd(); ++tIt)
 	{
 		static const char* kTypeNames[] = { "Null", "False", "True", "Object", "Array", "String", "Number" };
 		printf("Type of member %s is %s\n", tIt->name.GetString(), kTypeNames[tIt->value.GetType()]);
@@ -193,22 +246,27 @@ rapidjson::Document* HueBridge::makeHttpRequest(std::string iKey)
 }
 
 
+// Prints all member lights in a JSON object format
 void HueBridge::printAllLights()
 {
 	std::cout << "{" << std::endl;
 
-	std::list<PhillipsHueLight*>::const_iterator tIt = mLightsList.begin();
-	for ( ; tIt != mLightsList.end() ; )
-	{
-		std::cout << "\t{" << std::endl;
-		std::cout << "\t\t\"" << NAME_PRINT_KEY << "\": \"" << (*tIt)->getName() << "\"," << std::endl;
-		std::cout << "\t\t\"" << ID_PRINT_KEY << "\": \"" << (*tIt)->getId() << "\"," << std::endl;
-		std::cout << "\t\t\"" << LIGHT_STATE_PRINT_KEY << "\": " << ((*tIt)->getState() ? "true" : "false") << "," << std::endl;
-		std::cout << "\t\t\"" << BRIGHTNESS_PRINT_KEY << "\": \"" << (*tIt)->getBrightness() << "\"" << std::endl;
-		std::cout << "\t}" << (++tIt == mLightsList.end() ? "" : ",") << std::endl;
-	}
+	auto tIt = mLightMap.begin();
+	for ( ; tIt != mLightMap.end(); ) printNewLight((*tIt).second, ++tIt == mLightMap.end(), true);
 
 	std::cout << "}" << std::endl;
+}
+
+
+// Can be used to print an individual new light (Light, True, False) or a set of lights in a JSON object (Light#x, #x==#last, True)
+void HueBridge::printNewLight(PhillipsHueLight* iLight, bool iLastLight, bool iTabbed)
+{
+	std::cout << (iTabbed ? "\t" : "") << "{" << std::endl;
+	std::cout << "\t" << (iTabbed ? "\t" : "") << "\"" << NAME_PRINT_KEY << "\": \"" << iLight->getName() << "\"," << std::endl;
+	std::cout << "\t" << (iTabbed ? "\t" : "") << "\"" << ID_PRINT_KEY << "\": \"" << iLight->getId() << "\"," << std::endl;
+	std::cout << "\t" << (iTabbed ? "\t" : "") << "\"" << LIGHT_STATE_PRINT_KEY << "\": " << (iLight->getState() ? "true" : "false") << std::endl;
+	std::cout << "\t" << (iTabbed ? "\t" : "") << "\"" << BRIGHTNESS_PRINT_KEY << "\": " << iLight->getBrightness() << std::endl;
+	std::cout << (iTabbed ? "\t" : "") << "}" << (iLastLight ? "" : ",") << std::endl;
 }
 
 

@@ -8,6 +8,8 @@
 #include "constants.h"
 #include "PhillipsHueLight.h"
 
+#include <iostream>
+
 
 PhillipsHueLight::PhillipsHueLight()
 {
@@ -15,7 +17,7 @@ PhillipsHueLight::PhillipsHueLight()
 }
 
 
-PhillipsHueLight::PhillipsHueLight(int iId, std::string iName, bool iLightOn, int iBrightness)
+PhillipsHueLight::PhillipsHueLight(std::string iId, std::string iName, bool iLightOn, int iBrightness)
 {
 	mId = iId;
 	mName = iName;
@@ -31,25 +33,15 @@ PhillipsHueLight::~PhillipsHueLight()
 
 
 // Note that iBrightness will be on a scale of 0 to MAX_BRIGHTNESS (provided by Hue API) instead of 0 to 100
-PhillipsHueLight* PhillipsHueLight::CreateLight(int iId, std::string iName, bool iLightOn, int iBrightness)
+PhillipsHueLight* PhillipsHueLight::CreateLight(std::string iId, std::string iName, bool iLightOn, int iBrightness)
 {
-	if (iId < 0) return 0;
 	if (iBrightness < 0 || iBrightness > MAX_BRIGHTNESS) return 0;
 
 	return new PhillipsHueLight(iId, iName, iLightOn, iBrightness);
 }
 
 
-// Takes in new value and prints update
-void PhillipsHueLight::setId(int iId)
-{
-	mId = iId;
-
-	// TODO Print update
-}
-
-
-const int PhillipsHueLight::getId() const
+const std::string PhillipsHueLight::getId() const
 {
 	return mId;
 }
@@ -59,8 +51,7 @@ const int PhillipsHueLight::getId() const
 void PhillipsHueLight::setName(std::string iName)
 {
 	mName = iName;
-
-	// TODO Print update
+	printChange(NAME_PRINT_KEY, iName);
 }
 
 
@@ -74,8 +65,7 @@ const std::string PhillipsHueLight::getName() const
 void PhillipsHueLight::setState(bool iState)
 {
 	mLightOn = iState;
-
-	// TODO Print update
+	printChange(LIGHT_STATE_PRINT_KEY, iState);
 }
 
 
@@ -89,8 +79,7 @@ const bool PhillipsHueLight::getState() const
 void PhillipsHueLight::setBrightness(int iBrightness)
 {
 	mBrightness = iBrightness;
-
-	// TODO Print update
+	printChange(BRIGHTNESS_PRINT_KEY, iBrightness);
 }
 
 
@@ -100,5 +89,30 @@ const int PhillipsHueLight::getBrightness() const
 }
 
 
+void PhillipsHueLight::printChange(std::string iKey, std::string iNewValue)
+{
+	std::cout << "{" << std::endl;
+	std::cout << "\t\"" << ID_PRINT_KEY << "\": \"" << mId << "\"," << std::endl;
+	std::cout << "\t\"" << iKey << "\": \"" << iNewValue << "\"" << std::endl;
+	std::cout << "}" << std::endl;
+}
+
+
+void PhillipsHueLight::printChange(std::string iKey, bool iNewValue)
+{
+	std::cout << "{" << std::endl;
+	std::cout << "\t\"" << ID_PRINT_KEY << "\": \"" << mId << "\"," << std::endl;
+	std::cout << "\t\"" << iKey << "\": " << (iNewValue ? "true" : "false") << std::endl;
+	std::cout << "}" << std::endl;
+}
+
+
+void PhillipsHueLight::printChange(std::string iKey, int iNewValue)
+{
+	std::cout << "{" << std::endl;
+	std::cout << "\t\"" << ID_PRINT_KEY << "\": \"" << mId << "\"," << std::endl;
+	std::cout << "\t\"" << iKey << "\": " << iNewValue << std::endl;
+	std::cout << "}" << std::endl;
+}
 
 
