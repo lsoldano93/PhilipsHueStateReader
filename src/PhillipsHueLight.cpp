@@ -11,7 +11,7 @@
 
 PhillipsHueLight::PhillipsHueLight()
 {
-	// TODO Auto-generated constructor stub
+
 }
 
 
@@ -26,7 +26,7 @@ PhillipsHueLight::PhillipsHueLight(int iId, std::string iName, bool iLightOn, in
 
 PhillipsHueLight::~PhillipsHueLight()
 {
-	// TODO Auto-generated destructor stub
+
 }
 
 
@@ -98,5 +98,7 @@ const int PhillipsHueLight::getBrightness() const
 {
 	return mBrightness;
 }
+
+
 
 

@@ -33,6 +33,7 @@ public:
 	void setBrightness(int iBrightness);
 	const int getBrightness() const;
 
+
 private:
 
 	int mId;
@@ -40,7 +41,7 @@ private:
 	bool mLightOn;
 	int mBrightness;
 
-
+	void print();
 
 };
 

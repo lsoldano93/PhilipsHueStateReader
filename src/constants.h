@@ -3,11 +3,11 @@
 
 #define DEBUG					1
 
-// Phillips Hue Constants
+// Phillips Hue constants
 
 //// Bridge API URL keys
 
-#define NEW_DEVELOPER_KEY 		"api/newdeveloper"
+#define GET_FULL_STATE_KEY 		"api/newdeveloper"
 
 
 //// Bridge API JSON keys
@@ -22,3 +22,11 @@
 //// Minimums and maximums
 
 #define MAX_BRIGHTNESS 			255
+
+
+// Other constants
+
+#define NAME_PRINT_KEY			"name"
+#define	ID_PRINT_KEY			"id"
+#define LIGHT_STATE_PRINT_KEY	"on"
+#define BRIGHTNESS_PRINT_KEY	"brightness"

@@ -37,6 +37,8 @@ private:
 
 	rapidjson::Document* makeHttpRequest(std::string iKey);
 
+	void printAllLights();
+
 };
 
 #endif /* HUEBRIDGE_H_ */
