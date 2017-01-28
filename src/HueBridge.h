@@ -36,8 +36,8 @@ private:
 	std::string mAddress;
 	LightMap mLightMap;
 
-	void addLight(std::string iId);
-	void updateLight(PhillipsHueLight* iLight);
+	void addOrUpdateLight(bool iNewLight, std::string iId, PhillipsHueLight* iLightToUpdate);
+	void addOrUpdateLight(rapidjson::Value::ConstMemberIterator iLightIt, bool iNewLight, PhillipsHueLight* iLightToUpdate);
 	void checkLights();
 
 	rapidjson::Document* makeHttpRequest(std::string iKey);

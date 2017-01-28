@@ -16,6 +16,8 @@
 #include <curlpp/Easy.hpp>
 #include <curlpp/Options.hpp>
 
+#include <rapidjson/writer.h>
+
 
 HueBridge::HueBridge()
 {
@@ -69,50 +71,7 @@ bool HueBridge::getLights()
 	// Iterate through JSON lights object
 	for (auto tLight = (*tJson)[LIGHTS_JSON_KEY].MemberBegin(); tLight != (*tJson)[LIGHTS_JSON_KEY].MemberEnd(); ++tLight)
 	{
-		// Get light id
-		std::string tId = tLight->name.GetString();
-
-		// Get state values
-		if (tLight->value.HasMember(STATE_JSON_KEY) == false)
-		{
-			std::cout << "** Error with STATE_KEY for " << tId << " at getLights()\n";
-			continue;
-		}
-
-
-		//// Get light state
-		if (tLight->value[STATE_JSON_KEY].HasMember(LIGHT_STATE_JSON_KEY) == false)
-		{
-			std::cout << "** Error with LIGHT_STATE_KEY for " << tId << " at getLights()\n";
-			continue;
-		}
-
-		bool tLightState = tLight->value[STATE_JSON_KEY][LIGHT_STATE_JSON_KEY].GetBool();
-
-
-		//// Get brightness
-		if (tLight->value[STATE_JSON_KEY].HasMember(BRIGHTNESS_JSON_KEY) == false)
-		{
-			std::cout << "** Error with BRIGHTNESS_KEY for " << tId << " at getLights()\n";
-			continue;
-		}
-
-		int tBrightness = tLight->value[STATE_JSON_KEY][BRIGHTNESS_JSON_KEY].GetInt();
-
-
-		// Get name
-		if (tLight->value.HasMember(NAME_JSON_KEY) == false)
-		{
-			std::cout << "** Error with NAME_KEY for " << tId << " at getLights()\n";
-			continue;
-		}
-
-		std::string tName = tLight->value[NAME_JSON_KEY].GetString();
-
-
-		// Create a new Phillips Hue Light and store if it meets criteria
-		PhillipsHueLight* tHueLight = PhillipsHueLight::CreateLight(tId, tName, tLightState, tBrightness);
-		if (tHueLight != 0) mLightMap[tId] = tHueLight;
+		addOrUpdateLight(tLight, true, 0);
 	}
 
 	printAllLights();
@@ -125,7 +84,8 @@ bool HueBridge::getLights()
 void HueBridge::updateLights()
 {
 	checkLights();
-	for (auto it : mLightMap) updateLight(it.second);
+	std::cout << "Map Size:" << mLightMap.size()  << std::endl;
+	for (auto it : mLightMap) addOrUpdateLight(false, "", it.second);
 }
 
 
@@ -151,36 +111,118 @@ void HueBridge::checkLights()
 		tLightIds.insert(tIt->name.GetString());
 	}
 
-
 	// Compare ids to map - add new lights
 	for (const auto& tIt : tLightIds)
 	{
 		const auto tIt2 = mLightMap.find(tIt);
-		if (tIt2 == mLightMap.end()) addLight(tIt);
+		if (tIt2 == mLightMap.end()) addOrUpdateLight(true, tIt, 0);
 	}
 
 
 	// Compare ids to map - remove old lights
-	for (auto tIt = mLightMap.begin(); tIt != mLightMap.end(); )
+//	for (auto tIt = mLightMap.begin(); tIt != mLightMap.end(); )
+//	{
+//		const auto tIt2 = tLightIds.find(tIt->first);
+//		if (tIt2 == tLightIds.end())
+//		{
+//			delete tIt->second;
+//			mLightMap.erase(tIt++);
+//		}
+//	}
+}
+
+
+// Retrieves JSON light information and adds to member lightmap
+void HueBridge::addOrUpdateLight(bool iNewLight, std::string iId, PhillipsHueLight* iLightToUpdate)
+{
+	rapidjson::Document* tJson = makeHttpRequest(GET_LIGHT_KEY + iId);
+
+	// Verify JSON object
+	if (tJson == 0 || tJson->IsObject() == false)
 	{
-		const auto tIt2 = tLightIds.find(tIt->first);
-		if (tIt2 == tLightIds.end()) delete tIt->second;
-		mLightMap.erase(tIt++);
+		std::cout << "** Error in request/response string at addOrUpdateLight(bool, string, PHL)\n";
+		delete tJson;
+		return;
 	}
+
+	// Place JSON into reformatted structure - Originally: {"state": {...}, ...} New: {"id#" : {"state" : {...}, ...}}
+	rapidjson::Document tReformattedJson(rapidjson::kObjectType);
+	rapidjson::Document::AllocatorType& tAlloc = tReformattedJson.GetAllocator();
+	rapidjson::Value tValue(*tJson, tAlloc);
+	tReformattedJson.AddMember(rapidjson::StringRef(iId.c_str()), tValue, tAlloc);
+
+
+#if DEBUG
+	for (auto tIt = tReformattedJson.MemberBegin(); tIt != tReformattedJson.MemberEnd(); ++tIt)
+	{
+		static const char* kTypeNames[] = { "Null", "False", "True", "Object", "Array", "String", "Number" };
+		printf("Type of reformatted member %s is %s\n", tIt->name.GetString(), kTypeNames[tIt->value.GetType()]);
+	}
+#endif
+
+
+	addOrUpdateLight(tReformattedJson.MemberBegin(), iNewLight, iLightToUpdate);
+	delete tJson;
 }
 
 
-// Adds a new light to member map
-void HueBridge::addLight(std::string iId)
+// Uses JSON light iterator to add to member lightmap or update a given light
+void HueBridge::addOrUpdateLight(rapidjson::Value::ConstMemberIterator iLightIt, bool iNewLight, PhillipsHueLight* iLightToUpdate)
 {
+	// Get light id
+	std::string tId = iLightIt->name.GetString();
 
-}
+	// Get state values
+	if (iLightIt->value.HasMember(STATE_JSON_KEY) == false)
+	{
+		std::cout << "** Error with STATE_KEY for " << tId << " at addOrUpdateLight(rjson::it, bool, PHL)\n";
+		return;
+	}
 
 
-// Updates a given light
-void HueBridge::updateLight(PhillipsHueLight* iLight)
-{
+	//// Get light state
+	if (iLightIt->value[STATE_JSON_KEY].HasMember(LIGHT_STATE_JSON_KEY) == false)
+	{
+		std::cout << "** Error with LIGHT_STATE_KEY for " << tId << " at addOrUpdateLight(rjson::it, bool, PHL)\n";
+		return;
+	}
 
+	bool tLightState = iLightIt->value[STATE_JSON_KEY][LIGHT_STATE_JSON_KEY].GetBool();
+
+
+	//// Get brightness
+	if (iLightIt->value[STATE_JSON_KEY].HasMember(BRIGHTNESS_JSON_KEY) == false)
+	{
+		std::cout << "** Error with BRIGHTNESS_KEY for " << tId << " at addOrUpdateLight(rjson::it, bool, PHL)\n";
+		return;
+	}
+
+	int tBrightness = iLightIt->value[STATE_JSON_KEY][BRIGHTNESS_JSON_KEY].GetInt();
+
+
+	// Get name
+	if (iLightIt->value.HasMember(NAME_JSON_KEY) == false)
+	{
+		std::cout << "** Error with NAME_KEY for " << tId << " at addOrUpdateLight(rjson::it, bool, PHL)\n";
+		return;
+	}
+
+	std::string tName = iLightIt->value[NAME_JSON_KEY].GetString();
+
+
+	// Create a new Phillips Hue Light and store if specified and exit
+	if (iNewLight)
+	{
+		PhillipsHueLight* tHueLight = PhillipsHueLight::CreateLight(tId, tName, tLightState, tBrightness);
+		if (tHueLight != 0) mLightMap[tId] = tHueLight;
+		return;
+	}
+
+
+	// Update existing light's parameters if differing
+	if (tName != iLightToUpdate->getName()) iLightToUpdate->setName(tName);
+	if (tLightState != iLightToUpdate->getState()) iLightToUpdate->setState(tLightState);
+	if (tBrightness != iLightToUpdate->getBrightness()) iLightToUpdate->setBrightness(tBrightness);
 }
 
 
@@ -190,9 +232,11 @@ rapidjson::Document* HueBridge::makeHttpRequest(std::string iKey)
 	// Reformat to include Bridge address
 	std::string tUrl = mAddress + "/" + iKey;
 
+
 #if DEBUG
 	std::cout << "Making request to " << tUrl << "\n";
 #endif
+
 
 	try
 	{
@@ -210,9 +254,11 @@ rapidjson::Document* HueBridge::makeHttpRequest(std::string iKey)
 
 		tRequest.perform();
 
+
 #if DEBUG
 		std::cout << "Response: " << tResponseStream.str() << "\n";
 #endif
+
 
 		// Format to JSON and check for error
 		rapidjson::Document* tJson = new rapidjson::Document;
@@ -222,6 +268,7 @@ rapidjson::Document* HueBridge::makeHttpRequest(std::string iKey)
 			return 0;
 		}
 
+
 #if DEBUG
 	for (auto tIt = tJson->MemberBegin(); tIt != tJson->MemberEnd(); ++tIt)
 	{
@@ -229,6 +276,7 @@ rapidjson::Document* HueBridge::makeHttpRequest(std::string iKey)
 		printf("Type of member %s is %s\n", tIt->name.GetString(), kTypeNames[tIt->value.GetType()]);
 	}
 #endif
+
 
 		return tJson;
 	}
