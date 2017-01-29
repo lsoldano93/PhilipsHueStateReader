@@ -26,7 +26,7 @@ To test it like I did:
 		i. By default hue-simulator runs on port 80, which will require sudo
 		ii. If you do not wish to run on port 80, enter a value for Optional Port# and remove sudo
 	3. Check that simulator is running - Navigate to localhost on your web browser
-	4. Run PhilipsHueStateReader 
+	4. Run PhilipsHueStateReader (executable contained within PhilipsHueStateReader.zip)
 	5. When prompted, enter the address where hue-simulator is active
 		i. In my case that would be 'localhost:80' or just 'localhost'
 	6. Enter 'newdeveloper' as your username
