@@ -83,9 +83,8 @@ bool HueBridge::getLights()
 // Checks for new lights, then checks lights in member map and updates their state
 void HueBridge::updateLights()
 {
-	checkLights();
-	std::cout << "Map Size:" << mLightMap.size()  << std::endl;
-	for (auto it : mLightMap) addOrUpdateLight(false, "", it.second);
+	//checkLights();
+	for (auto it : mLightMap) addOrUpdateLight(false, it.first, it.second);
 }
 
 
@@ -96,27 +95,27 @@ void HueBridge::checkLights()
 	rapidjson::Document* tJson = makeHttpRequest(GET_LIGHTS_KEY);
 
 	// Verify JSON object
-	if (tJson == 0 || tJson->IsObject() == false)
-	{
-		std::cout << "** Error in request/response string at checkLights()\n";
-		delete tJson;
-		return;
-	}
+//	if (tJson == 0 || tJson->IsObject() == false)
+//	{
+//		std::cout << "** Error in request/response string at checkLights()\n";
+//		delete tJson;
+//		return;
+//	}
 
 
 	// Iterate through JSON object
-	std::set<std::string> tLightIds;
-	for (auto tIt = tJson->MemberBegin(); tIt != tJson->MemberEnd(); ++tIt)
-	{
-		tLightIds.insert(tIt->name.GetString());
-	}
+//	std::set<std::string> tLightIds;
+//	for (auto tIt = tJson->MemberBegin(); tIt != tJson->MemberEnd(); ++tIt)
+//	{
+//		tLightIds.insert(tIt->name.GetString());
+//	}
 
 	// Compare ids to map - add new lights
-	for (const auto& tIt : tLightIds)
-	{
-		const auto tIt2 = mLightMap.find(tIt);
-		if (tIt2 == mLightMap.end()) addOrUpdateLight(true, tIt, 0);
-	}
+//	for (const auto& tIt : tLightIds)
+//	{
+//		const auto tIt2 = mLightMap.find(tIt);
+//		if (tIt2 == mLightMap.end()) addOrUpdateLight(true, tIt, 0);
+//	}
 
 
 	// Compare ids to map - remove old lights
@@ -313,7 +312,7 @@ void HueBridge::printNewLight(PhillipsHueLight* iLight, bool iLastLight, bool iT
 	std::cout << "\t" << (iTabbed ? "\t" : "") << "\"" << NAME_PRINT_KEY << "\": \"" << iLight->getName() << "\"," << std::endl;
 	std::cout << "\t" << (iTabbed ? "\t" : "") << "\"" << ID_PRINT_KEY << "\": \"" << iLight->getId() << "\"," << std::endl;
 	std::cout << "\t" << (iTabbed ? "\t" : "") << "\"" << LIGHT_STATE_PRINT_KEY << "\": " << (iLight->getState() ? "true" : "false") << std::endl;
-	std::cout << "\t" << (iTabbed ? "\t" : "") << "\"" << BRIGHTNESS_PRINT_KEY << "\": " << iLight->getBrightness() << std::endl;
+	std::cout << "\t" << (iTabbed ? "\t" : "") << "\"" << BRIGHTNESS_PRINT_KEY << "\": " << iLight->getPercentBrightness() << std::endl;
 	std::cout << (iTabbed ? "\t" : "") << "}" << (iLastLight ? "" : ",") << std::endl;
 }
 

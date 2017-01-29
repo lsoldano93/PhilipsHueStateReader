@@ -28,6 +28,7 @@ public:
 
 	void setBrightness(int iBrightness);
 	const int getBrightness() const;
+	const int getPercentBrightness() const;
 
 
 private:

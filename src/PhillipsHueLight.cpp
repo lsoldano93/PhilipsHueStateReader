@@ -22,7 +22,7 @@ PhillipsHueLight::PhillipsHueLight(std::string iId, std::string iName, bool iLig
 	mId = iId;
 	mName = iName;
 	mLightOn = iLightOn;
-	mBrightness = (100 * iBrightness) / MAX_BRIGHTNESS;
+	mBrightness = iBrightness;
 }
 
 
@@ -32,7 +32,7 @@ PhillipsHueLight::~PhillipsHueLight()
 }
 
 
-// Note that iBrightness will be on a scale of 0 to MAX_BRIGHTNESS (provided by Hue API) instead of 0 to 100
+// Note that iBrightness will be on a scale of 0 to MAX_BRIGHTNESS (provided by Hue API) instead of 0 to 100% (as it is printed out)
 PhillipsHueLight* PhillipsHueLight::CreateLight(std::string iId, std::string iName, bool iLightOn, int iBrightness)
 {
 	if (iBrightness < 0 || iBrightness > MAX_BRIGHTNESS) return 0;
@@ -79,13 +79,19 @@ const bool PhillipsHueLight::getState() const
 void PhillipsHueLight::setBrightness(int iBrightness)
 {
 	mBrightness = iBrightness;
-	printChange(BRIGHTNESS_PRINT_KEY, iBrightness);
+	printChange(BRIGHTNESS_PRINT_KEY, getPercentBrightness());
 }
 
 
 const int PhillipsHueLight::getBrightness() const
 {
 	return mBrightness;
+}
+
+
+const int PhillipsHueLight::getPercentBrightness() const
+{
+	return (100 * mBrightness) / MAX_BRIGHTNESS;
 }
 
 
