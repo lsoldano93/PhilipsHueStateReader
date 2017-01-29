@@ -27,17 +27,23 @@ HueBridge::HueBridge()
 
 HueBridge::~HueBridge()
 {
-	// Free PhillipsHueLights pointers
+	// Free PhilipsHueLights pointers
 	for (auto tIt : mLightMap) delete tIt.second;
+}
+
+
+void HueBridge::setUser(std::string iUser)
+{
+	mUser = iUser;
 }
 
 
 bool HueBridge::setAddress(std::string iAddress)
 {
-	// TODO: Check iAddress
+	// Validate address and thus user
+	rapidjson::Document* tJson = makeHttpRequest(GET_FULL_STATE_KEY);
 
 	mAddress = iAddress;
-
 	return false;
 }
 
@@ -83,7 +89,7 @@ bool HueBridge::getLights()
 // Checks for new lights, then checks lights in member map and updates their state
 void HueBridge::updateLights()
 {
-	//checkLights();
+	checkLights();
 	for (auto it : mLightMap) addOrUpdateLight(false, it.first, it.second);
 }
 
@@ -95,44 +101,47 @@ void HueBridge::checkLights()
 	rapidjson::Document* tJson = makeHttpRequest(GET_LIGHTS_KEY);
 
 	// Verify JSON object
-//	if (tJson == 0 || tJson->IsObject() == false)
-//	{
-//		std::cout << "** Error in request/response string at checkLights()\n";
-//		delete tJson;
-//		return;
-//	}
+	if (tJson == 0 || tJson->IsObject() == false)
+	{
+		std::cout << "** Error in request/response string at checkLights()\n";
+		delete tJson;
+		return;
+	}
 
 
 	// Iterate through JSON object
-//	std::set<std::string> tLightIds;
-//	for (auto tIt = tJson->MemberBegin(); tIt != tJson->MemberEnd(); ++tIt)
-//	{
-//		tLightIds.insert(tIt->name.GetString());
-//	}
+	std::set<std::string> tLightIds;
+	for (auto tIt = tJson->MemberBegin(); tIt != tJson->MemberEnd(); ++tIt)
+	{
+		tLightIds.insert(tIt->name.GetString());
+	}
+
 
 	// Compare ids to map - add new lights
-//	for (const auto& tIt : tLightIds)
-//	{
-//		const auto tIt2 = mLightMap.find(tIt);
-//		if (tIt2 == mLightMap.end()) addOrUpdateLight(true, tIt, 0);
-//	}
+	for (const auto& tIt : tLightIds)
+	{
+		const auto tIt2 = mLightMap.find(tIt);
+		if (tIt2 == mLightMap.end()) addOrUpdateLight(true, tIt, 0);
+	}
 
 
 	// Compare ids to map - remove old lights
-//	for (auto tIt = mLightMap.begin(); tIt != mLightMap.end(); )
-//	{
-//		const auto tIt2 = tLightIds.find(tIt->first);
-//		if (tIt2 == tLightIds.end())
-//		{
-//			delete tIt->second;
-//			mLightMap.erase(tIt++);
-//		}
-//	}
+	for (auto tIt = mLightMap.begin(); tIt != mLightMap.end(); )
+	{
+		const auto tIt2 = tLightIds.find(tIt->first);
+		if (tIt2 == tLightIds.end())
+		{
+			delete tIt->second;
+			mLightMap.erase(tIt++);
+		}
+		else
+			++tIt;
+	}
 }
 
 
 // Retrieves JSON light information and adds to member lightmap
-void HueBridge::addOrUpdateLight(bool iNewLight, std::string iId, PhillipsHueLight* iLightToUpdate)
+void HueBridge::addOrUpdateLight(bool iNewLight, std::string iId, PhilipsHueLight* iLightToUpdate)
 {
 	rapidjson::Document* tJson = makeHttpRequest(GET_LIGHT_KEY + iId);
 
@@ -166,7 +175,7 @@ void HueBridge::addOrUpdateLight(bool iNewLight, std::string iId, PhillipsHueLig
 
 
 // Uses JSON light iterator to add to member lightmap or update a given light
-void HueBridge::addOrUpdateLight(rapidjson::Value::ConstMemberIterator iLightIt, bool iNewLight, PhillipsHueLight* iLightToUpdate)
+void HueBridge::addOrUpdateLight(rapidjson::Value::ConstMemberIterator iLightIt, bool iNewLight, PhilipsHueLight* iLightToUpdate)
 {
 	// Get light id
 	std::string tId = iLightIt->name.GetString();
@@ -209,10 +218,10 @@ void HueBridge::addOrUpdateLight(rapidjson::Value::ConstMemberIterator iLightIt,
 	std::string tName = iLightIt->value[NAME_JSON_KEY].GetString();
 
 
-	// Create a new Phillips Hue Light and store if specified and exit
+	// Create a new Philips Hue Light and store if specified and exit
 	if (iNewLight)
 	{
-		PhillipsHueLight* tHueLight = PhillipsHueLight::CreateLight(tId, tName, tLightState, tBrightness);
+		PhilipsHueLight* tHueLight = PhilipsHueLight::CreateLight(tId, tName, tLightState, tBrightness);
 		if (tHueLight != 0) mLightMap[tId] = tHueLight;
 		return;
 	}
@@ -229,7 +238,7 @@ void HueBridge::addOrUpdateLight(rapidjson::Value::ConstMemberIterator iLightIt,
 rapidjson::Document* HueBridge::makeHttpRequest(std::string iKey)
 {
 	// Reformat to include Bridge address
-	std::string tUrl = mAddress + "/" + iKey;
+	std::string tUrl = mAddress + API_KEY + mUser + iKey;
 
 
 #if DEBUG
@@ -306,7 +315,7 @@ void HueBridge::printAllLights()
 
 
 // Can be used to print an individual new light (Light, True, False) or a set of lights in a JSON object (Light#x, #x==#last, True)
-void HueBridge::printNewLight(PhillipsHueLight* iLight, bool iLastLight, bool iTabbed)
+void HueBridge::printNewLight(PhilipsHueLight* iLight, bool iLastLight, bool iTabbed)
 {
 	std::cout << (iTabbed ? "\t" : "") << "{" << std::endl;
 	std::cout << "\t" << (iTabbed ? "\t" : "") << "\"" << NAME_PRINT_KEY << "\": \"" << iLight->getName() << "\"," << std::endl;

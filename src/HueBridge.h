@@ -8,14 +8,14 @@
 #ifndef HUEBRIDGE_H_
 #define HUEBRIDGE_H_
 
-#include "PhillipsHueLight.h"
+#include "PhilipsHueLight.h"
 
 #include <rapidjson/Document.h>
 
 #include <string>
 #include <map>
 
-typedef std::map<std::string, PhillipsHueLight*> LightMap;
+typedef std::map<std::string, PhilipsHueLight*> LightMap;
 
 class HueBridge
 {
@@ -25,6 +25,7 @@ public:
 	HueBridge();
 	~HueBridge();
 
+	void setUser(std::string iUser);
 	bool setAddress(std::string iAddress);
 	const std::string getAddress();
 
@@ -33,17 +34,18 @@ public:
 
 private:
 
+	std::string mUser;
 	std::string mAddress;
 	LightMap mLightMap;
 
-	void addOrUpdateLight(bool iNewLight, std::string iId, PhillipsHueLight* iLightToUpdate);
-	void addOrUpdateLight(rapidjson::Value::ConstMemberIterator iLightIt, bool iNewLight, PhillipsHueLight* iLightToUpdate);
+	void addOrUpdateLight(bool iNewLight, std::string iId, PhilipsHueLight* iLightToUpdate);
+	void addOrUpdateLight(rapidjson::Value::ConstMemberIterator iLightIt, bool iNewLight, PhilipsHueLight* iLightToUpdate);
 	void checkLights();
 
 	rapidjson::Document* makeHttpRequest(std::string iKey);
 
 	void printAllLights();
-	void printNewLight(PhillipsHueLight* iLight, bool iLastLight, bool iTabbed);
+	void printNewLight(PhilipsHueLight* iLight, bool iLastLight, bool iTabbed);
 
 };
 

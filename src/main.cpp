@@ -9,40 +9,78 @@
 
 #include <unistd.h>
 #include <iostream>
+#include <thread>
+
+#define	QUIT_COMMAND "q"
+
+bool mQNotPressed = true;
+bool mUpdateStepReached = false;
+
+
+void philipsBridgeInterfaceThread()
+{
+	HueBridge tHueBridge;
+
+	// Run while address invalid and q not pressed
+	std::string tAddress;
+	std::string tUser;
+
+	// Ask user for address of bridge
+	std::cout << "\nWelcome to Philip's Hue State Reader!" << std::endl;
+	std::cout << "Please enter your Philip's Bridge Address: ";
+	std::cin >> tAddress;
+
+	std::cout << "Please enter your Philip's Bridge Username: ";
+	std::cin >> tUser;
+	std::cout << std::endl;
+
+	// Configure Bridge API to use given address and check address'/username's validity
+	tHueBridge.setUser(tUser);
+	if (tHueBridge.setAddress(tAddress) == true)
+	{
+		std::cout << "Error validating username and address, please restart program and try again";
+		mQNotPressed = false;
+		return;
+	}
+
+	mUpdateStepReached = true;
+
+	// Get all lights and add to list
+	tHueBridge.getLights();
+
+	// Run until user issues exit command
+	while (mQNotPressed)
+	{
+		tHueBridge.updateLights();
+		usleep(1000000); // 1sh
+	}
+}
 
 
 int main(int argc, char *argv[])
 {
-	HueBridge tHueBridge;
+	// Start Philips interface thread
+	std::thread tInterfaceThread(philipsBridgeInterfaceThread);
 
-    // TODO: Add ability to exit with key press
-    // Run while address invalid
-    while (true)
-    {
-    	std::string tAddress;
+	// Wait for q to be pressed for exit
+	while (mQNotPressed)
+	{
+		if (mUpdateStepReached == false) continue;
+		else
+		{
+			static uint8_t i = 0;
+			if (i == 0)
+			{
+				std::cout << "Connection successful!" << std::endl;
+				std::cout << "Enter '" << QUIT_COMMAND << "' to exit at any time\n" << std::endl;
+				++i;
+			}
+		}
 
-		// Ask user for address of bridge
-		std::cout << "Welcome to Phillip's Hue State Reader!" << std::endl;
-		std::cout << "Please enter your Phillip's Bridge IP Address: ";
-		//std::cin >> tAddress;
-		std::cout << std::endl;
+		if (std::cin.get() == 'q') mQNotPressed = false;
+	}
 
-		// Configure Bridge API to use given address and check address' validity
-		tAddress = "localhost";
-		if (tHueBridge.setAddress(tAddress) == false) break;
-    }
-
-    // Get all lights and add to list
-    tHueBridge.getLights();
-
-    // TODO: Add ability to exit with key press
-    // Run until user issues exit command
-    while (true)
-    {
-    	tHueBridge.updateLights();
-    	usleep(1000000);
-    }
-
+	std::cout << "\nProgram Complete!\n" << std::endl;
     return 0;
 }
 

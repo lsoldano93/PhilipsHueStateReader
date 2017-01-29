@@ -3,14 +3,14 @@
 
 #define DEBUG					0
 
-// Phillips Hue constants
+// Philips Hue constants
 
 //// Bridge API URL keys
 
-#define HUE_USER				"newdeveloper"
-#define GET_FULL_STATE_KEY 		"api/newdeveloper"
-#define GET_LIGHTS_KEY			"api/newdeveloper/lights"
-#define GET_LIGHT_KEY			"api/newdeveloper/lights/"
+#define API_KEY					"/api/"
+#define GET_FULL_STATE_KEY 		""
+#define GET_LIGHTS_KEY			"/lights"
+#define GET_LIGHT_KEY			"/lights/"
 
 
 //// Bridge API JSON keys

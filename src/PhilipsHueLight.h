@@ -1,22 +1,22 @@
 /*
- * PhillipsHueLight.h
+ * PhilipsHueLight.h
  *
  *  Created on: Jan 26, 2017
  *      Author: Luke
  */
 
-#ifndef PHILLIPSHUELIGHT_H_
-#define PHILLIPSHUELIGHT_H_
+#ifndef PHILIPSHUELIGHT_H_
+#define PHILIPSHUELIGHT_H_
 
 #include <string>
 
-class PhillipsHueLight
+class PhilipsHueLight
 {
 
 public:
 
-	static PhillipsHueLight* CreateLight(std::string iId, std::string iName, bool iLightOn, int iBrightness);
-	~PhillipsHueLight();
+	static PhilipsHueLight* CreateLight(std::string iId, std::string iName, bool iLightOn, int iBrightness);
+	~PhilipsHueLight();
 
 	const std::string getId() const;
 
@@ -38,8 +38,8 @@ private:
 	bool mLightOn;
 	int mBrightness;
 
-	PhillipsHueLight();
-	PhillipsHueLight(std::string iId, std::string iName, bool iLightOn, int iBrightness);
+	PhilipsHueLight();
+	PhilipsHueLight(std::string iId, std::string iName, bool iLightOn, int iBrightness);
 
 	void printChange(std::string iKey, std::string iNewValue);
 	void printChange(std::string iKey, bool iNewValue);
@@ -47,4 +47,4 @@ private:
 
 };
 
-#endif /* PHILLIPSHUELIGHT_H_ */
+#endif /* PHILIPSHUELIGHT_H_ */
