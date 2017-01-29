@@ -70,6 +70,7 @@ int main(int argc, char *argv[])
 		if (std::cin.get() == 'q') mQNotPressed = false;
 	}
 
+	tInterfaceThread.join();
 	std::cout << "\n\nProgram Complete!\n" << std::endl;
     return 0;
 }
