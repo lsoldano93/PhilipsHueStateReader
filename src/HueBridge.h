@@ -25,9 +25,9 @@ public:
 	HueBridge();
 	~HueBridge();
 
-	void setUser(std::string iUser);
-	bool setAddress(std::string iAddress);
-	const std::string getAddress();
+	bool connect(std::string iAddress, std::string iUser);
+	const std::string getAddress() const;
+	const std::string getBridgeName() const;
 
 	bool getLights();
 	void updateLights();
@@ -36,10 +36,11 @@ private:
 
 	std::string mUser;
 	std::string mAddress;
+	std::string mBridgeName;
 	LightMap mLightMap;
 
-	void addOrUpdateLight(bool iNewLight, std::string iId, PhilipsHueLight* iLightToUpdate);
-	void addOrUpdateLight(rapidjson::Value::ConstMemberIterator iLightIt, bool iNewLight, PhilipsHueLight* iLightToUpdate);
+	bool addOrUpdateLight(bool iNewLight, std::string iId, PhilipsHueLight* iLightToUpdate);
+	bool addOrUpdateLight(rapidjson::Value::ConstMemberIterator iLightIt, bool iNewLight, PhilipsHueLight* iLightToUpdate);
 	void checkLights();
 
 	rapidjson::Document* makeHttpRequest(std::string iKey);

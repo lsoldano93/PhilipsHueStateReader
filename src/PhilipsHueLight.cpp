@@ -11,11 +11,6 @@
 #include <iostream>
 
 
-PhilipsHueLight::PhilipsHueLight()
-{
-
-}
-
 
 PhilipsHueLight::PhilipsHueLight(std::string iId, std::string iName, bool iLightOn, int iBrightness)
 {
@@ -33,12 +28,12 @@ PhilipsHueLight::~PhilipsHueLight()
 
 
 // Note that iBrightness will be on a scale of 0 to MAX_BRIGHTNESS (provided by Hue API) instead of 0 to 100% (as it is printed out)
-PhilipsHueLight* PhilipsHueLight::CreateLight(std::string iId, std::string iName, bool iLightOn, int iBrightness)
-{
-	if (iBrightness < 0 || iBrightness > MAX_BRIGHTNESS) return 0;
-
-	return new PhilipsHueLight(iId, iName, iLightOn, iBrightness);
-}
+//PhilipsHueLight* PhilipsHueLight::CreateLight(std::string iId, std::string iName, bool iLightOn, int iBrightness)
+//{
+//	if (iBrightness < 0 || iBrightness > MAX_BRIGHTNESS) return 0;
+//
+//	return new PhilipsHueLight(iId, iName, iLightOn, iBrightness);
+//}
 
 
 const std::string PhilipsHueLight::getId() const
@@ -79,7 +74,8 @@ const bool PhilipsHueLight::getState() const
 void PhilipsHueLight::setBrightness(int iBrightness)
 {
 	mBrightness = iBrightness;
-	printChange(BRIGHTNESS_PRINT_KEY, getPercentBrightness());
+	if (iBrightness < 0 || iBrightness > MAX_BRIGHTNESS) printChange(BRIGHTNESS_PRINT_KEY, 0, true);
+	else printChange(BRIGHTNESS_PRINT_KEY, getPercentBrightness(), false);
 }
 
 
@@ -91,7 +87,7 @@ const int PhilipsHueLight::getBrightness() const
 
 const int PhilipsHueLight::getPercentBrightness() const
 {
-	return (100 * mBrightness) / MAX_BRIGHTNESS;
+	return ((100 * mBrightness) / MAX_BRIGHTNESS);
 }
 
 
@@ -113,11 +109,11 @@ void PhilipsHueLight::printChange(std::string iKey, bool iNewValue)
 }
 
 
-void PhilipsHueLight::printChange(std::string iKey, int iNewValue)
+void PhilipsHueLight::printChange(std::string iKey, int iNewValue, bool iInvalidValue)
 {
 	std::cout << "{" << std::endl;
 	std::cout << "\t\"" << ID_PRINT_KEY << "\": \"" << mId << "\"," << std::endl;
-	std::cout << "\t\"" << iKey << "\": " << iNewValue << std::endl;
+	std::cout << "\t\"" << iKey << "\": " << (iInvalidValue ? "invalid" : std::to_string(iNewValue)) << std::endl;
 	std::cout << "}" << std::endl;
 }
 

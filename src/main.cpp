@@ -35,15 +35,16 @@ void philipsBridgeInterfaceThread()
 	std::cout << std::endl;
 
 	// Configure Bridge API to use given address and check address'/username's validity
-	tHueBridge.setUser(tUser);
-	if (tHueBridge.setAddress(tAddress) == true)
+	if (tHueBridge.connect(tAddress, tUser) == true)
 	{
-		std::cout << "Error validating username and address, please restart program and try again";
+		std::cout << "** Error validating username or address, please restart program and try again";
 		mQNotPressed = false;
 		return;
 	}
 
 	mUpdateStepReached = true;
+	std::cout << "Connection to bridge '" << tHueBridge.getBridgeName() << "' successful!" << std::endl;
+	std::cout << "Enter '" << QUIT_COMMAND << "' to exit at any time\n" << std::endl;
 
 	// Get all lights and add to list
 	tHueBridge.getLights();
@@ -66,21 +67,10 @@ int main(int argc, char *argv[])
 	while (mQNotPressed)
 	{
 		if (mUpdateStepReached == false) continue;
-		else
-		{
-			static uint8_t i = 0;
-			if (i == 0)
-			{
-				std::cout << "Connection successful!" << std::endl;
-				std::cout << "Enter '" << QUIT_COMMAND << "' to exit at any time\n" << std::endl;
-				++i;
-			}
-		}
-
 		if (std::cin.get() == 'q') mQNotPressed = false;
 	}
 
-	std::cout << "\nProgram Complete!\n" << std::endl;
+	std::cout << "\n\nProgram Complete!\n" << std::endl;
     return 0;
 }
 

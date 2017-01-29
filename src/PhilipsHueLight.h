@@ -15,7 +15,8 @@ class PhilipsHueLight
 
 public:
 
-	static PhilipsHueLight* CreateLight(std::string iId, std::string iName, bool iLightOn, int iBrightness);
+	//static PhilipsHueLight* CreateLight(std::string iId, std::string iName, bool iLightOn, int iBrightness);
+	PhilipsHueLight(std::string iId, std::string iName, bool iLightOn, int iBrightness);
 	~PhilipsHueLight();
 
 	const std::string getId() const;
@@ -38,12 +39,9 @@ private:
 	bool mLightOn;
 	int mBrightness;
 
-	PhilipsHueLight();
-	PhilipsHueLight(std::string iId, std::string iName, bool iLightOn, int iBrightness);
-
 	void printChange(std::string iKey, std::string iNewValue);
 	void printChange(std::string iKey, bool iNewValue);
-	void printChange(std::string iKey, int iNewValue);
+	void printChange(std::string iKey, int iNewValue, bool iInvalidValue);
 
 };
 
