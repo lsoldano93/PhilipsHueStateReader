@@ -220,6 +220,12 @@ bool HueBridge::addOrUpdateLight(bool iNewLight, std::string iId, PhilipsHueLigh
 bool HueBridge::addOrUpdateLight(rapidjson::Value::ConstMemberIterator iLightIt, bool iNewLight, PhilipsHueLight* iLightToUpdate)
 {
 	// Get light id
+	if (iLightIt->name.IsString() == false)
+		{
+			std::cout << "** Error with LIGHT_ID for at addOrUpdateLight(rjson::it, bool, PHL)\n";
+			return false;
+		}
+
 	std::string tId = iLightIt->name.GetString();
 
 	// Get state values
@@ -231,7 +237,8 @@ bool HueBridge::addOrUpdateLight(rapidjson::Value::ConstMemberIterator iLightIt,
 
 
 	//// Get light state
-	if (iLightIt->value[STATE_JSON_KEY].HasMember(LIGHT_STATE_JSON_KEY) == false)
+	if (iLightIt->value[STATE_JSON_KEY].HasMember(LIGHT_STATE_JSON_KEY) == false
+			|| iLightIt->value[STATE_JSON_KEY][LIGHT_STATE_JSON_KEY].IsBool() == false)
 	{
 		std::cout << "** Error with LIGHT_STATE_KEY for " << tId << " at addOrUpdateLight(rjson::it, bool, PHL)\n";
 		return false;
@@ -241,7 +248,8 @@ bool HueBridge::addOrUpdateLight(rapidjson::Value::ConstMemberIterator iLightIt,
 
 
 	//// Get brightness
-	if (iLightIt->value[STATE_JSON_KEY].HasMember(BRIGHTNESS_JSON_KEY) == false)
+	if (iLightIt->value[STATE_JSON_KEY].HasMember(BRIGHTNESS_JSON_KEY) == false
+			|| iLightIt->value[STATE_JSON_KEY][BRIGHTNESS_JSON_KEY].IsInt() == false)
 	{
 		std::cout << "** Error with BRIGHTNESS_KEY for " << tId << " at addOrUpdateLight(rjson::it, bool, PHL)\n";
 		return false;
@@ -251,7 +259,8 @@ bool HueBridge::addOrUpdateLight(rapidjson::Value::ConstMemberIterator iLightIt,
 
 
 	// Get name
-	if (iLightIt->value.HasMember(NAME_JSON_KEY) == false)
+	if (iLightIt->value.HasMember(NAME_JSON_KEY) == false
+			|| iLightIt->value[NAME_JSON_KEY].IsString() == false)
 	{
 		std::cout << "** Error with NAME_KEY for " << tId << " at addOrUpdateLight(rjson::it, bool, PHL)\n";
 		return false;
@@ -379,7 +388,7 @@ void HueBridge::printAllLights()
 // Can be used to print an individual new light (Light, True, False) or a set of lights in a JSON object (Light#x, #x==#last, True)
 void HueBridge::printNewLight(PhilipsHueLight* iLight, bool iLastLight, bool iTabbed)
 {
-	std::string tBrightness = (iLight->getBrightness() < 0 || iLight->getBrightness() > MAX_BRIGHTNESS) ? "invalid" : std::to_string(iLight->getBrightness());
+	std::string tBrightness = (iLight->getBrightness() < 0 || iLight->getBrightness() > MAX_BRIGHTNESS) ? "invalid" : std::to_string(iLight->getPercentBrightness());
 	std::cout << (iTabbed ? "\t" : "") << "{" << std::endl;
 	std::cout << "\t" << (iTabbed ? "\t" : "") << "\"" << NAME_PRINT_KEY << "\": \"" << iLight->getName() << "\"," << std::endl;
 	std::cout << "\t" << (iTabbed ? "\t" : "") << "\"" << ID_PRINT_KEY << "\": \"" << iLight->getId() << "\"," << std::endl;
